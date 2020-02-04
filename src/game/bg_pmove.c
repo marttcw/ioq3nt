@@ -1628,16 +1628,24 @@ static void PM_Weapon( void ) {
 	pm->ps->weaponstate = WEAPON_FIRING;
 
 	// check for out of ammo
-	if ( ! pm->ps->ammo[ pm->ps->weapon ] ) {
+	// modified for changing ammo from ps->ammo to client->clipammo
+	// updated to ps->stats[STAT_AMMO]
+	// OLD: if ( !pm->ps->ammo[ pm->ps->weapon ]) ...
+	
+	if ( !pm->ps->stats[STAT_AMMO] ) {
 		PM_AddEvent( EV_NOAMMO );
 		pm->ps->weaponTime += 500;
 		return;
 	}
 
 	// take an ammo away if not infinite
+	// This will go within "game" in g_weapon.c because
+	// ammo is stored in gclient_t
+	/*****
 	if ( pm->ps->ammo[ pm->ps->weapon ] != -1 ) {
 		pm->ps->ammo[ pm->ps->weapon ]--;
 	}
+	*/
 
 	// fire weapon
 	PM_AddEvent( EV_FIRE_WEAPON );

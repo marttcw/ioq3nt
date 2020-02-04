@@ -693,6 +693,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 		break;
 
 	case WP_GRAPPLING_HOOK:
+		cgs.media.lightningShader = trap_R_RegisterShader("lightningBolt");
 		MAKERGB( weaponInfo->flashDlightColor, 0.6f, 0.6f, 1.0f );
 		weaponInfo->missileModel = trap_R_RegisterModel( "models/ammo/rocket/rocket.md3" );
 		weaponInfo->missileTrailFunc = CG_GrappleTrail;

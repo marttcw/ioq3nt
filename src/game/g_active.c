@@ -1181,6 +1181,9 @@ void ClientEndFrame( gentity_t *ent ) {
 		ent->client->ps.eFlags &= ~EF_CONNECTION;
 	}
 
+	// Update the ammo ammount in weapon
+	ent->client->ps.stats[STAT_AMMO] = ent->client->clipammo[ent->client->ps.weapon];
+
 	ent->client->ps.stats[STAT_HEALTH] = ent->health;	// FIXME: get rid of ent->health...
 
 	G_SetClientSound (ent);

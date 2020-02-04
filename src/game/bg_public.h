@@ -209,6 +209,7 @@ typedef enum {
 	STAT_WEAPONS,					// 16 bit fields
 	STAT_ARMOR,				
 	STAT_DEAD_YAW,					// look this direction when dead (FIXME: get rid of?)
+	STAT_AMMO,					// Ammo Held in Current Weapon
 	STAT_CLIENTS_READY,				// bit mask of clients wishing to exit the intermission (FIXME: configstring?)
 	STAT_MAX_HEALTH					// health / armor limit, changeable by handicap
 } statIndex_t;
@@ -549,6 +550,16 @@ typedef enum {
 
 	TEAM_NUM_TEAMS
 } team_t;
+
+// PCLASS Class feature (Like NeoTokyo)
+// TODO/IDEA: Turn it into operator/champion feature? (EX: R6S/QC)
+typedef enum {
+	PCLASS_RECON,
+	PCLASS_ASSAULT,
+	PCLASS_SUPPORT,
+
+	PCLASS_NUM_CLASSES
+} pclass_t;
 
 // Time between location updates
 #define TEAM_LOCATION_UPDATE_TIME		1000

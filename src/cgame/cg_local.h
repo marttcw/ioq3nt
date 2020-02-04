@@ -1072,6 +1072,10 @@ typedef struct {
 	// media
 	cgMedia_t		media;
 
+	// KILDEREAN
+	int allowhook;
+	// END KILDEREAN
+
 } cgs_t;
 
 //==============================================================================

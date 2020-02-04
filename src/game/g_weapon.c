@@ -800,6 +800,11 @@ FireWeapon
 ===============
 */
 void FireWeapon( gentity_t *ent ) {
+	// Remove ammo if not infinite
+	if (ent->client->clipammo[ent->client->ps.weapon] != -1) {
+		ent->client->clipammo[ent->client->ps.weapon]--;
+	}
+
 	if (ent->client->ps.powerups[PW_QUAD] ) {
 		s_quadFactor = g_quadfactor.value;
 	} else {

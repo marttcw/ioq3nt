@@ -248,6 +248,8 @@ typedef struct {
 	int			voteCount;			// to prevent people from constantly calling votes
 	int			teamVoteCount;		// to prevent people from constantly calling votes
 	qboolean	teamInfo;			// send team overlay updates?
+	pclass_t	playerclass;			// The players current class
+	pclass_t	newplayerclass;			// The class the player will become when it respawns
 } clientPersistant_t;
 
 
@@ -308,6 +310,9 @@ struct gclient_s {
 
 	int			switchTeamTime;		// time the player switched teams
 
+	// Our Ammo Variable, ps.ammo, now refers to Bag Ammo
+	int			clipammo[MAX_WEAPONS];
+
 	// timeResidual is used to handle events that happen every second
 	// like health / armor countdowns and regeneration
 	int			timeResidual;
@@ -321,7 +326,6 @@ struct gclient_s {
 
 	char		*areabits;
 };
-
 
 //
 // this structure is cleared as each map is entered
@@ -749,6 +753,10 @@ extern	vmCvar_t	g_singlePlayer;
 extern	vmCvar_t	g_proxMineTimeout;
 extern	vmCvar_t	g_localTeamPref;
 
+// KILDEREAN
+extern	vmCvar_t	g_PureAllowHook;
+// END KILDEREAN
+
 void	trap_Print( const char *text );
 void	trap_Error( const char *text ) __attribute__((noreturn));
 int		trap_Milliseconds( void );
@@ -953,4 +961,9 @@ void	trap_BotResetWeaponState(int weaponstate);
 int		trap_GeneticParentsAndChildSelection(int numranks, float *ranks, int *parent1, int *parent2, int *child);
 
 void	trap_SnapVector( float *v );
+
+// Reload feature
+void Cmd_Reload(gentity_t *ent);
+int ClipAmountForWeapon(int w);
+int WeaponReloadTime(int w);
 

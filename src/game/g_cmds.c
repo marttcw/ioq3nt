@@ -1739,6 +1739,121 @@ void Cmd_Cloak_f(gentity_t *ent)
 }
 
 /*
+==================
+  Cmd_Reload
+==================
+*/
+void
+Cmd_Reload( gentity_t *ent )
+{
+	int weapon;
+	int amt;
+	int ammotoadd;
+
+	weapon = ent->client->ps.weapon;
+	amt = ClipAmountForWeapon(weapon);
+	ammotoadd = amt;
+
+	if (ent->client->clipammo[weapon] >= ClipAmountForWeapon(weapon)) {
+		trap_SendServerCommand( ent-g_entities,
+			va("print \"No need to reload.\n\""));
+		return;
+	}
+
+	ent->client->ps.weaponstate = WEAPON_DROPPING;
+	ent->client->ps.torsoAnim = ( ( ent->client->ps.torsoAnim & ANIM_TOGGLEBIT )
+		^ ANIM_TOGGLEBIT )	| TORSO_DROP;
+	ent->client->ps.weaponTime += WeaponReloadTime(weapon);
+	//Play a sound maybe: thats up to you.
+
+	if (ent->client->ps.ammo[weapon] == 0)
+		return;
+
+	//We can only add ammo(to weapon) what we need
+	if (ent->client->clipammo[weapon] > 0)	{
+		ammotoadd -= ent->client->clipammo[weapon];
+	}
+
+	//We can only remove (from bag) what ammo we have
+	if (ent->client->ps.ammo[weapon] < ammotoadd)	{
+		ammotoadd = ent->client->ps.ammo[weapon];
+	}
+
+	//Remove the ammo from bag
+	ent->client->ps.ammo[weapon] -= ammotoadd;
+
+	//Add the ammo to weapon
+	ent->client->clipammo[weapon] += ammotoadd;
+}
+
+/*
+==================
+  ClipAmountForWeapon for Cmd_Reload
+==================
+TODO
+*/
+int ClipAmountForWeapon( int w ) {
+	// How much each clip holds
+	switch (w) {
+	case WP_MACHINEGUN:
+		return 30;
+	case WP_GRENADE_LAUNCHER:
+		return 1;
+	case WP_PLASMAGUN:
+		return 20;
+	case WP_SHOTGUN:
+		return 7;
+	case WP_LIGHTNING:
+		return 25;
+	case WP_RAILGUN:
+		return 3;
+	case WP_ROCKET_LAUNCHER:
+		return 1;
+	case WP_GRAPPLING_HOOK:
+		return -1;
+	case WP_GAUNTLET:
+		return -1;
+	default:
+		return 12;
+	}
+}
+
+/*
+ * WeaponReadloadTime for Cmd_Reload
+ *
+ * Allows different reload time (in ms)
+ */
+int
+WeaponReloadTime(int w)
+{
+	// How long the reload takes in ms 
+	switch (w) {
+	case WP_MACHINEGUN:
+		return 1000;
+	case WP_GRENADE_LAUNCHER:
+		return 400;
+	case WP_PLASMAGUN:
+		return 1500;
+	case WP_SHOTGUN:
+		return 1250;
+	case WP_LIGHTNING:
+		return 1700;
+	case WP_RAILGUN:
+		return 2250;
+	case WP_ROCKET_LAUNCHER:
+		return 400;
+	// 0 - Reload should not happen anyway
+	case WP_GRAPPLING_HOOK:
+		return 0;
+	case WP_GAUNTLET:
+		return 0;
+	// Unknown weapon
+	default:
+		return 12;
+	}
+}
+
+/*
 =================
 ClientCommand
 =================
@@ -1858,6 +1973,8 @@ void ClientCommand( int clientNum ) {
 		Cmd_RBounce_f(ent);
 	else if (Q_stricmp (cmd, "cloak") == 0)
 		Cmd_Cloak_f(ent);
+	else if (Q_stricmp (cmd, "reload") == 0)
+		Cmd_Reload(ent);
 	else
 		trap_SendServerCommand( clientNum, va("print \"unknown cmd %s\n\"", cmd ) );
 }

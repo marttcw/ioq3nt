@@ -641,6 +641,32 @@ static void CG_DrawStatusBar( void ) {
 		}
 
 	}
+
+	// TODO
+	// ammo in gun
+	// 
+	value = ps->stats[STAT_AMMO];
+	if (value > 0) {
+		// First Draw the 3D model of the weapon
+		angles[YAW] = ( cg.time & 2047 ) * 360 / 2048.0;
+		origin[0] = 80;
+		origin[1] = 0;
+		origin[2] = 0;
+		CG_Draw3DModel( CHAR_WIDTH*3 + TEXT_ICON_SPACE, 360, 96,
+			96, cg_weapons[ cent->currentState.weapon ].weaponModel,
+			0, origin, angles );
+
+		//Draw the Text
+		trap_R_SetColor( colors[0] );
+		CG_DrawField (0, 384, 3, value);
+		trap_R_SetColor( NULL );
+
+		// if we didn't draw a 3D icon, draw a 2D icon for weapon
+		if ( !cg_draw3dIcons.integer && cg_drawIcons.integer ) {
+			CG_DrawPic( CHAR_WIDTH*3 + TEXT_ICON_SPACE, 384, ICON_SIZE, ICON_SIZE,
+				cg_weapons[ cg.predictedPlayerState.weapon ].weaponIcon );
+		}
+	}
 }
 #endif
 
@@ -2298,7 +2324,7 @@ static void CG_DrawAmmoWarning( void ) {
 	if ( cg.lowAmmoWarning == 2 ) {
 		s = "OUT OF AMMO";
 	} else {
-		s = "LOW AMMO WARNING";
+		//s = "LOW AMMO WARNING"; EDIT/TODO
 	}
 	w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
 	CG_DrawBigString(320 - w / 2, 64, s, 1.0F);
@@ -2564,8 +2590,10 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 #else
 			CG_DrawStatusBar();
 #endif
-      
-			CG_DrawAmmoWarning();
+			// KILDEREAN: screw ammo warning when g_PureAllowHook = 1
+			if (!cgs.allowhook)
+				CG_DrawAmmoWarning();
+			// END KILDEREAN
 
 #ifdef MISSIONPACK
 			CG_DrawProxWarning();

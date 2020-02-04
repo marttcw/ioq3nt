@@ -781,6 +781,20 @@ void ClientUserinfoChanged( int clientNum ) {
 		Q_strncpyz( headModel, Info_ValueForKey (userinfo, "headmodel"), sizeof( headModel ) );
 	}
 
+	// OpenArena models
+	if (!Q_stricmp(model, "major/default"))
+		client->pers.newplayerclass = PCLASS_RECON;
+	else if (!Q_stricmp(model, "sarge/indigo"))
+		client->pers.newplayerclass = PCLASS_ASSAULT;
+	else if (!Q_stricmp(model, "smarine/default"))
+		client->pers.newplayerclass = PCLASS_SUPPORT;
+	else {
+		client->pers.newplayerclass = PCLASS_ASSAULT;
+		Q_strncpyz(model, "sarge/indigo", sizeof(model));
+	}
+
+	client->pers.playerclass = client->pers.newplayerclass;
+
 /*	NOTE: all client side now
 
 	// team
@@ -1057,6 +1071,7 @@ void ClientSpawn(gentity_t *ent) {
 	int		accuracy_hits, accuracy_shots;
 	int		eventSequence;
 	char	userinfo[MAX_INFO_STRING];
+	int		weaponsSelectAmount;
 
 	index = ent - g_entities;
 	client = ent->client;
@@ -1158,6 +1173,8 @@ void ClientSpawn(gentity_t *ent) {
 	ent->waterlevel = 0;
 	ent->watertype = 0;
 	ent->flags = 0;
+
+	client->pers.playerclass = client->pers.newplayerclass;
 	
 	VectorCopy (playerMins, ent->r.mins);
 	VectorCopy (playerMaxs, ent->r.maxs);
@@ -1170,13 +1187,38 @@ void ClientSpawn(gentity_t *ent) {
 	} else {
 		client->ps.ammo[WP_MACHINEGUN] = 100;
 	}
+	client->clipammo[WP_MACHINEGUN] = ClipAmountForWeapon(WP_MACHINEGUN);
+
+	// assign weapons according to class
+	switch (client->pers.playerclass) {
+	case PCLASS_RECON:
+		client->ps.stats[STAT_WEAPONS] |= (1 << WP_SHOTGUN);
+		client->ps.ammo[WP_SHOTGUN] = 30;
+		client->clipammo[WP_SHOTGUN] = ClipAmountForWeapon(WP_SHOTGUN);
+		//if (g_PureAllowHook.integer) {
+		if (qtrue) {
+			client->ps.stats[STAT_WEAPONS] |= (1 << WP_GRAPPLING_HOOK);
+			client->ps.ammo[WP_GRAPPLING_HOOK] = -1;
+			client->clipammo[WP_GRAPPLING_HOOK] = -1;
+		}
+		break;
+	case PCLASS_SUPPORT:
+		client->ps.stats[STAT_WEAPONS] |= (1 << WP_RAILGUN);
+		client->ps.ammo[WP_RAILGUN] = 7;
+		client->clipammo[WP_RAILGUN] = ClipAmountForWeapon(WP_RAILGUN);
+		break;
+	case PCLASS_ASSAULT:
+	default:
+		client->ps.stats[STAT_WEAPONS] |= (1 << WP_PLASMAGUN);
+		client->ps.ammo[WP_PLASMAGUN] = 50;
+		client->clipammo[WP_PLASMAGUN] = ClipAmountForWeapon(WP_PLASMAGUN);
+		break;
+	}
 
 	client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GAUNTLET );
-	// start MATT
-	client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_GRAPPLING_HOOK);
-	// end MATT
+
 	client->ps.ammo[WP_GAUNTLET] = -1;
-	client->ps.ammo[WP_GRAPPLING_HOOK] = -1;
+	client->clipammo[WP_GAUNTLET] = -1;
 
 	// health will count down towards max_health
 	ent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH] + 25;
@@ -1212,10 +1254,15 @@ void ClientSpawn(gentity_t *ent) {
 			// select the highest weapon number available, after any spawn given items have fired
 			client->ps.weapon = 1;
 
-			// start MATT
-			for (i = WP_NUM_WEAPONS - 2 ; i > 0 ; i--) {
-				// changed -1 to -2 so the grapple isn't selected by default
-				// end MATT
+			// changed -1 to -2 so the grapple isn't selected by default
+			// WP_GRAPPLING_HOOK
+			if (client->pers.playerclass == PCLASS_RECON) {
+				weaponsSelectAmount = 2;
+			} else {
+				weaponsSelectAmount = 1;
+			}
+
+			for (i = WP_NUM_WEAPONS - weaponsSelectAmount; i > 0 ; i--) {
 				if (client->ps.stats[STAT_WEAPONS] & (1 << i)) {
 					client->ps.weapon = i;
 					break;

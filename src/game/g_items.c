@@ -259,7 +259,16 @@ int Pickup_Weapon (gentity_t *ent, gentity_t *other) {
 	// add the weapon
 	other->client->ps.stats[STAT_WEAPONS] |= ( 1 << ent->item->giTag );
 
-	Add_Ammo( other, ent->item->giTag, quantity );
+	/*
+	 * Add_Ammo( other, ent->item->giTag, quantity );
+	 */
+
+	quantity = ClipAmountForWeapon(ent->item->giTag);
+	if (other->client->clipammo[ent->item->giTag] > 0) {
+		Add_Ammo(other, ent->item->giTag, quantity);
+	} else {
+		other->client->clipammo[ent->item->giTag] = quantity;
+	}
 
 	if (ent->item->giTag == WP_GRAPPLING_HOOK)
 		other->client->ps.ammo[ent->item->giTag] = -1; // unlimited ammo
@@ -811,6 +820,11 @@ void ClearRegisteredItems( void ) {
 	// players always start with the base weapon
 	RegisterItem( BG_FindItemForWeapon( WP_MACHINEGUN ) );
 	RegisterItem( BG_FindItemForWeapon( WP_GAUNTLET ) );
+	// KILDEREAN
+	if (g_PureAllowHook.integer) {
+		RegisterItem(BG_FindItemForWeapon(WP_GRAPPLING_HOOK));
+	}
+	// END KILDEREAN
 #ifdef MISSIONPACK
 	if( g_gametype.integer == GT_HARVESTER ) {
 		RegisterItem( BG_FindItem( "Red Cube" ) );
