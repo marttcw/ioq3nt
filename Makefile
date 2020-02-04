@@ -12,7 +12,7 @@ ifeq ($(COMPILE_PLATFORM),sunos)
 endif
 
 ifndef BUILD_STANDALONE
-  BUILD_STANDALONE =
+  BUILD_STANDALONE = 1
 endif
 ifndef BUILD_CLIENT
   BUILD_CLIENT     =
@@ -116,7 +116,7 @@ SERVERBIN=ioq3ded
 endif
 
 ifndef BASEGAME
-BASEGAME=baseq3
+BASEGAME=nt
 endif
 
 ifndef BASEGAME_CFLAGS
@@ -140,7 +140,7 @@ COPYBINDIR=$(COPYDIR)
 endif
 
 ifndef MOUNT_DIR
-MOUNT_DIR=code
+MOUNT_DIR=src
 endif
 
 ifndef BUILD_DIR
