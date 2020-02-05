@@ -62,7 +62,29 @@ void SP_info_player_intermission( gentity_t *ent ) {
 
 }
 
+/*
+ * MaxHealthByClass
+ *
+ * Pick which health are assigned by which class
+ */
+int
+MaxHealthByClass(gentity_t *ent)
+{
+	gclient_t	*client;
 
+	client = ent->client;
+
+	// set max health by class
+	switch(client->pers.playerclass) {
+	case PCLASS_RECON:
+		return 80;
+	case PCLASS_SUPPORT:
+		return 150;
+	case PCLASS_ASSAULT:
+	default:
+		return 100;
+	}
+}
 
 /*
 =======================================================================
@@ -759,16 +781,19 @@ void ClientUserinfoChanged( int clientNum ) {
 	} else {
 		health = atoi( Info_ValueForKey( userinfo, "handicap" ) );
 		client->pers.maxHealth = health;
-		if ( client->pers.maxHealth < 1 || client->pers.maxHealth > 100 ) {
-			client->pers.maxHealth = 100;
+		if ( client->pers.maxHealth < 1 || client->pers.maxHealth > MaxHealthByClass(ent) ) {
+			client->pers.maxHealth = MaxHealthByClass(ent);
 		}
 	}
 #else
-	health = atoi( Info_ValueForKey( userinfo, "handicap" ) );
+	//health = atoi( Info_ValueForKey( userinfo, "handicap" ) );
+	health = MaxHealthByClass(ent);
 	client->pers.maxHealth = health;
-	if ( client->pers.maxHealth < 1 || client->pers.maxHealth > 100 ) {
-		client->pers.maxHealth = 100;
+	/*
+	if ( client->pers.maxHealth < 1 || client->pers.maxHealth > MaxHealthByClass(ent) ) {
+		client->pers.maxHealth = MaxHealthByClass(ent);
 	}
+	*/
 #endif
 	client->ps.stats[STAT_MAX_HEALTH] = client->pers.maxHealth;
 
@@ -1154,10 +1179,13 @@ void ClientSpawn(gentity_t *ent) {
 
 	trap_GetUserinfo( index, userinfo, sizeof(userinfo) );
 	// set max health
-	client->pers.maxHealth = atoi( Info_ValueForKey( userinfo, "handicap" ) );
-	if ( client->pers.maxHealth < 1 || client->pers.maxHealth > 100 ) {
-		client->pers.maxHealth = 100;
+	//client->pers.maxHealth = atoi( Info_ValueForKey( userinfo, "handicap" ) );
+	client->pers.maxHealth = MaxHealthByClass(ent);
+	/*
+	if ( client->pers.maxHealth < 1 || client->pers.maxHealth > MaxHealthByClass(ent) ) {
+		client->pers.maxHealth = MaxHealthByClass(ent);
 	}
+	*/
 	// clear entity values
 	client->ps.stats[STAT_MAX_HEALTH] = client->pers.maxHealth;
 	client->ps.eFlags = flags;
@@ -1221,7 +1249,10 @@ void ClientSpawn(gentity_t *ent) {
 	client->clipammo[WP_GAUNTLET] = -1;
 
 	// health will count down towards max_health
-	ent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH] + 25;
+	//ent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH] + 25;
+	
+	// Spawn as max health
+	ent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH];
 
 	G_SetOrigin( ent, spawn_origin );
 	VectorCopy( spawn_origin, client->ps.origin );

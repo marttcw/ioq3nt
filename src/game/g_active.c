@@ -462,11 +462,13 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 			} else {
 				// EDIT/TODO
 				// count down health when cloaked
+				/*
 				ent->health--;
 				if (ent->health < 11) {
 					ent->flags ^= FL_CLOAK;
 					ent->client->ps.powerups[PW_INVIS] = level.time;
 				}
+				*/
 			}
 		}
 
@@ -852,6 +854,20 @@ void ClientThink_real( gentity_t *ent ) {
 	// set speed
 	client->ps.speed = g_speed.value;
 
+	// Alter speed by class
+	// EDIT
+	switch (client->pers.playerclass) {
+	case PCLASS_RECON:
+		client->ps.speed *= 1.2;
+		break;
+	case PCLASS_SUPPORT:
+		client->ps.speed *= 0.6;
+		break;
+	case PCLASS_ASSAULT:
+	default:
+		client->ps.speed *= 0.9;
+	}
+
 #ifdef MISSIONPACK
 	if( bg_itemlist[client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_SCOUT ) {
 		client->ps.speed *= 1.5;
@@ -859,7 +875,6 @@ void ClientThink_real( gentity_t *ent ) {
 	else
 #endif
 	if ( client->ps.powerups[PW_HASTE] ) { // EDIT/TODO
-	//if ( qtrue ) {
 		client->ps.speed *= 1.3;
 	}
 

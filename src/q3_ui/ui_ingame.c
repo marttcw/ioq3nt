@@ -772,10 +772,6 @@ static void DynamicMenu_MenuEvent( void* self, int event )
 	}
 }
 
-
-
-
-
 /*
 =================
 DynamicMenu_Close
@@ -796,6 +792,58 @@ static void DM_Close_Event( int index )
 	UI_PopMenu();
 }
 
+enum {
+	CC_RECON,
+	CC_ASSAULT,
+	CC_SUPPORT
+} changeClassId;
+
+/*
+ * DM_ChangeClass_Event
+ */
+static void DM_ChangeClass_Event(int index)
+{
+	int cmd;
+
+	cmd = s_dynamic.data[index].id;
+	switch (cmd) {
+	case CC_RECON:
+		trap_Cmd_ExecuteText(EXEC_APPEND, va("changeclass recon\n"));
+		break;
+	case CC_ASSAULT:
+		trap_Cmd_ExecuteText(EXEC_APPEND, va("changeclass assault\n"));
+		break;
+	case CC_SUPPORT:
+		trap_Cmd_ExecuteText(EXEC_APPEND, va("changeclass support\n"));
+		break;
+	default:
+		Com_Printf("DM_ChangeClass_Event: unknown command (%i)\n", cmd);
+	}
+	DynamicMenu_Close();
+}
+
+/*
+ * DM_ChangeClass_SubMenu
+ */
+static void DM_ChangeClass_SubMenu(void)
+{
+	DynamicMenu_SubMenuInit();
+
+	DynamicMenu_AddItem("Recon", 	CC_RECON,   NULL, DM_ChangeClass_Event);
+	DynamicMenu_AddItem("Assault", 	CC_ASSAULT, NULL, DM_ChangeClass_Event);
+	DynamicMenu_AddItem("Support", 	CC_SUPPORT, NULL, DM_ChangeClass_Event);
+
+	DynamicMenu_FinishSubMenuInit();
+}
+
+/*
+ * DM_Sudoku
+ */
+static void DM_Sudoku_Event(int index)
+{
+	trap_Cmd_ExecuteText(EXEC_APPEND, va("kill\n"));
+	DynamicMenu_Close();
+}
 
 /*
 =================
@@ -805,10 +853,11 @@ DynamicMenu_InitPrimaryMenu
 static void DynamicMenu_InitPrimaryMenu( void )
 {
 	DynamicMenu_SubMenuInit();
-	DynamicMenu_AddItem("Close!", 0, NULL, DM_Close_Event);
+	DynamicMenu_AddItem("Change class", 	0, DM_ChangeClass_SubMenu, NULL);
+	DynamicMenu_AddItem("Commit sudoku", 	0, NULL, DM_Sudoku_Event);
+	DynamicMenu_AddItem("Close", 		0, NULL, DM_Close_Event);
 	DynamicMenu_FinishSubMenuInit();
 }
-
 
 /*
 =================
@@ -833,16 +882,13 @@ static void DynamicMenu_MenuInit( void )
 		s_dynamic.item[i].generic.id = i;
 		s_dynamic.item[i].string = s_dynamic.data[i].text;
 		s_dynamic.item[i].style = UI_SMALLFONT|UI_DROPSHADOW;
-		s_dynamic.item[i].color = color_red;
+		s_dynamic.item[i].color = color_white;
 
 		Menu_AddItem(&s_dynamic.menu, &s_dynamic.item[i]);
 	}
 
 	// start up the menu system
 	s_dynamic.depth = 0;
-
-//	Uncomment the next line if adding part II as well
-//	DynamicMenu_InitMapItems();
 
 	DynamicMenu_InitPrimaryMenu();
 }
@@ -872,19 +918,9 @@ void UI_DynamicMenu( void )
 		+ cs.clientNum, info, MAX_INFO_STRING );
 	playerTeam = atoi(Info_ValueForKey(info, "t"));
 
-//	Uncomment the next two code lines if adding part II 
-//	as well, or specs can't use the menu either
-//	if (playerTeam == TEAM_SPECTATOR)
-//		return;
-
 	memset(&s_dynamic.menu, 0, sizeof(dynamicmenu_t));
 
 	s_dynamic.gametype = (int)trap_Cvar_VariableValue("g_gametype");
-
-//	Uncomment the next three lines if adding part II as well
-//	if (s_dynamic.gametype != GT_TEAM && 
-//			s_dynamic.gametype != GT_CTF)
-//		return;
 
 	UI_DynamicMenuCache();
 
@@ -899,8 +935,6 @@ void UI_DynamicMenu( void )
 
 	UI_PushMenu( &s_dynamic.menu );
 }
-
-
 
 /*
 =================

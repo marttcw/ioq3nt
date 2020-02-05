@@ -1731,7 +1731,7 @@ void Cmd_Cloak_f(gentity_t *ent)
 		// Removes the invisible powerup from the player
 	} else {
 		msg = "Cloaking ON\n";
-		ent->client->ps.powerups[PW_INVIS] = level.time + 10000000000;
+		ent->client->ps.powerups[PW_INVIS] = level.time + 10000000;
 		// Gives the invisible powerup to the player
 	}
 
@@ -1851,6 +1851,50 @@ WeaponReloadTime(int w)
 	default:
 		return 12;
 	}
+}
+
+/*
+ * Cmd_ChangeClass_f
+ */
+void Cmd_ChangeClass_f(gentity_t *ent)
+{
+	char 		*msg;	// Message to the player
+	char 		class[MAX_TOKEN_CHARS];	// String given
+	char 		*validClasses = "recon, assault, support";		// For message: List of valid classes
+	gclient_t	*client;
+
+	// Get user information and set model
+	client = ent->client;
+
+	if (trap_Argc() < 2) {
+		trap_SendServerCommand(ent-g_entities, va("print \"Error: No class given."
+					" Class available: %s\"", validClasses));
+		return;
+	}
+
+	trap_Argv(1, class, sizeof(class));
+
+	if (!Q_stricmp(class, "recon")) {
+		msg = "Recon\n";
+		client->pers.newplayerclass = PCLASS_RECON;
+		trap_SendConsoleCommand(EXEC_APPEND, va("model major/default\n"));
+	} else if (!Q_stricmp(class, "assault")) {
+		msg = "Assault\n";
+		client->pers.newplayerclass = PCLASS_ASSAULT;
+		trap_SendConsoleCommand(EXEC_APPEND, va("model sarge/default\n"));
+	} else if (!Q_stricmp(class, "support")) {
+		msg = "Support\n";
+		client->pers.newplayerclass = PCLASS_SUPPORT;
+		trap_SendConsoleCommand(EXEC_APPEND, va("model smarine/default\n"));
+	} else {
+		trap_SendServerCommand(ent-g_entities, va("print \"Error: Cannot class, '%s' is invalid."
+					" Valid classes: %s\"", class, validClasses));
+		return;
+	}
+
+	ent->client->pers.playerclass = ent->client->pers.newplayerclass;
+
+	trap_SendServerCommand(ent-g_entities, va("print \"Class changed to: %s\"", msg));
 }
 
 /*
@@ -1975,6 +2019,8 @@ void ClientCommand( int clientNum ) {
 		Cmd_Cloak_f(ent);
 	else if (Q_stricmp (cmd, "reload") == 0)
 		Cmd_Reload(ent);
+	else if (Q_stricmp (cmd, "changeclass") == 0)
+		Cmd_ChangeClass_f(ent);
 	else
 		trap_SendServerCommand( clientNum, va("print \"unknown cmd %s\n\"", cmd ) );
 }
