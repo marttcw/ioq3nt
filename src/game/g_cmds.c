@@ -1877,22 +1877,20 @@ void Cmd_ChangeClass_f(gentity_t *ent)
 	if (!Q_stricmp(class, "recon")) {
 		msg = "Recon\n";
 		client->pers.newplayerclass = PCLASS_RECON;
-		trap_SendConsoleCommand(EXEC_APPEND, va("model major/default\n"));
+		//trap_SendConsoleCommand(EXEC_APPEND, va("model major/default\n"));
 	} else if (!Q_stricmp(class, "assault")) {
 		msg = "Assault\n";
 		client->pers.newplayerclass = PCLASS_ASSAULT;
-		trap_SendConsoleCommand(EXEC_APPEND, va("model sarge/default\n"));
+		//trap_SendConsoleCommand(EXEC_APPEND, va("model sarge/default\n"));
 	} else if (!Q_stricmp(class, "support")) {
 		msg = "Support\n";
 		client->pers.newplayerclass = PCLASS_SUPPORT;
-		trap_SendConsoleCommand(EXEC_APPEND, va("model smarine/default\n"));
+		//trap_SendConsoleCommand(EXEC_APPEND, va("model smarine/default\n"));
 	} else {
 		trap_SendServerCommand(ent-g_entities, va("print \"Error: Cannot class, '%s' is invalid."
 					" Valid classes: %s\"", class, validClasses));
 		return;
 	}
-
-	ent->client->pers.playerclass = ent->client->pers.newplayerclass;
 
 	trap_SendServerCommand(ent-g_entities, va("print \"Class changed to: %s\"", msg));
 }

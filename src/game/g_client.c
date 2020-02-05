@@ -68,14 +68,10 @@ void SP_info_player_intermission( gentity_t *ent ) {
  * Pick which health are assigned by which class
  */
 int
-MaxHealthByClass(gentity_t *ent)
+MaxHealthByClass(int class)
 {
-	gclient_t	*client;
-
-	client = ent->client;
-
 	// set max health by class
-	switch(client->pers.playerclass) {
+	switch (class) {
 	case PCLASS_RECON:
 		return 80;
 	case PCLASS_SUPPORT:
@@ -774,6 +770,16 @@ void ClientUserinfoChanged( int clientNum ) {
 		}
 	}
 
+	if( g_gametype.integer >= GT_TEAM ) {
+		Q_strncpyz( model, Info_ValueForKey (userinfo, "team_model"), sizeof( model ) );
+		Q_strncpyz( headModel, Info_ValueForKey (userinfo, "team_headmodel"), sizeof( headModel ) );
+	} else {
+		Q_strncpyz( model, Info_ValueForKey (userinfo, "model"), sizeof( model ) );
+		Q_strncpyz( headModel, Info_ValueForKey (userinfo, "headmodel"), sizeof( headModel ) );
+	}
+
+	client->pers.playerclass = client->pers.newplayerclass;
+
 	// set max health
 #ifdef MISSIONPACK
 	if (client->ps.powerups[PW_GUARD]) {
@@ -781,13 +787,13 @@ void ClientUserinfoChanged( int clientNum ) {
 	} else {
 		health = atoi( Info_ValueForKey( userinfo, "handicap" ) );
 		client->pers.maxHealth = health;
-		if ( client->pers.maxHealth < 1 || client->pers.maxHealth > MaxHealthByClass(ent) ) {
-			client->pers.maxHealth = MaxHealthByClass(ent);
+		if ( client->pers.maxHealth < 1 || client->pers.maxHealth > MaxHealthByClass(client->pers.playerclass) ) {
+			client->pers.maxHealth = MaxHealthByClass(client->pers.playerclass);
 		}
 	}
 #else
 	//health = atoi( Info_ValueForKey( userinfo, "handicap" ) );
-	health = MaxHealthByClass(ent);
+	health = MaxHealthByClass(client->pers.playerclass);
 	client->pers.maxHealth = health;
 	/*
 	if ( client->pers.maxHealth < 1 || client->pers.maxHealth > MaxHealthByClass(ent) ) {
@@ -797,28 +803,23 @@ void ClientUserinfoChanged( int clientNum ) {
 #endif
 	client->ps.stats[STAT_MAX_HEALTH] = client->pers.maxHealth;
 
-	// set model
-	if( g_gametype.integer >= GT_TEAM ) {
-		Q_strncpyz( model, Info_ValueForKey (userinfo, "team_model"), sizeof( model ) );
-		Q_strncpyz( headModel, Info_ValueForKey (userinfo, "team_headmodel"), sizeof( headModel ) );
-	} else {
-		Q_strncpyz( model, Info_ValueForKey (userinfo, "model"), sizeof( model ) );
-		Q_strncpyz( headModel, Info_ValueForKey (userinfo, "headmodel"), sizeof( headModel ) );
-	}
+	// set model at client update
 
-	// OpenArena models
-	if (!Q_stricmp(model, "major/default"))
-		client->pers.newplayerclass = PCLASS_RECON;
-	else if (!Q_stricmp(model, "sarge/indigo"))
-		client->pers.newplayerclass = PCLASS_ASSAULT;
-	else if (!Q_stricmp(model, "smarine/default"))
-		client->pers.newplayerclass = PCLASS_SUPPORT;
-	else {
-		client->pers.newplayerclass = PCLASS_ASSAULT;
+	switch (client->pers.playerclass) {
+	case PCLASS_RECON:
+		Q_strncpyz(model, "major/default", sizeof(model));
+		break;
+	case PCLASS_SUPPORT:
+		Q_strncpyz(model, "smarine/default", sizeof(model));
+		break;
+	case PCLASS_ASSAULT:
+	default:
+		client->pers.playerclass = PCLASS_ASSAULT;
 		Q_strncpyz(model, "sarge/indigo", sizeof(model));
 	}
+	Q_strncpyz(headModel, model, sizeof(headModel));
 
-	client->pers.playerclass = client->pers.newplayerclass;
+	trap_SendServerCommand( -1, va("print \"(client) model set to: %s\n\"", model)); 
 
 /*	NOTE: all client side now
 
@@ -993,6 +994,10 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	}
 	G_ReadSessionData( client );
 
+	// Initializes playerclass
+	client->pers.newplayerclass = PCLASS_ASSAULT;
+	client->pers.playerclass = PCLASS_ASSAULT;
+
 	// get and distribute relevant parameters
 	G_LogPrintf( "ClientConnect: %i\n", clientNum );
 	ClientUserinfoChanged( clientNum );
@@ -1097,6 +1102,8 @@ void ClientSpawn(gentity_t *ent) {
 	int		eventSequence;
 	char	userinfo[MAX_INFO_STRING];
 	int		weaponsSelectAmount;
+	char	model[MAX_QPATH];
+	char	headModel[MAX_QPATH];
 
 	index = ent - g_entities;
 	client = ent->client;
@@ -1139,6 +1146,7 @@ void ClientSpawn(gentity_t *ent) {
 	// always clear the kamikaze flag
 	ent->s.eFlags &= ~EF_KAMIKAZE;
 
+
 	// toggle the teleport bit so the client knows to not lerp
 	// and never clear the voted flag
 	flags = ent->client->ps.eFlags & (EF_TELEPORT_BIT | EF_VOTED | EF_TEAMVOTED);
@@ -1180,7 +1188,7 @@ void ClientSpawn(gentity_t *ent) {
 	trap_GetUserinfo( index, userinfo, sizeof(userinfo) );
 	// set max health
 	//client->pers.maxHealth = atoi( Info_ValueForKey( userinfo, "handicap" ) );
-	client->pers.maxHealth = MaxHealthByClass(ent);
+	client->pers.maxHealth = MaxHealthByClass(client->pers.newplayerclass);
 	/*
 	if ( client->pers.maxHealth < 1 || client->pers.maxHealth > MaxHealthByClass(ent) ) {
 		client->pers.maxHealth = MaxHealthByClass(ent);
@@ -1201,6 +1209,35 @@ void ClientSpawn(gentity_t *ent) {
 	ent->waterlevel = 0;
 	ent->watertype = 0;
 	ent->flags = 0;
+
+	// set model at spawn
+	// TODO
+	
+	if( g_gametype.integer >= GT_TEAM ) {
+		Q_strncpyz( model, Info_ValueForKey (userinfo, "team_model"), sizeof( model ) );
+		Q_strncpyz( headModel, Info_ValueForKey (userinfo, "team_headmodel"), sizeof( headModel ) );
+	} else {
+		Q_strncpyz( model, Info_ValueForKey (userinfo, "model"), sizeof( model ) );
+		Q_strncpyz( headModel, Info_ValueForKey (userinfo, "headmodel"), sizeof( headModel ) );
+	}
+
+	switch (client->pers.newplayerclass) {
+	case PCLASS_RECON:
+		Q_strncpyz(model, "major/default", sizeof(model));
+		break;
+	case PCLASS_SUPPORT:
+		Q_strncpyz(model, "smarine/default", sizeof(model));
+		break;
+	case PCLASS_ASSAULT:
+	default:
+		client->pers.newplayerclass = PCLASS_ASSAULT;
+		Q_strncpyz(model, "sarge/indigo", sizeof(model));
+	}
+	Q_strncpyz(headModel, model, sizeof(headModel));
+	trap_SendConsoleCommand(EXEC_APPEND, va("model %s\n", model));
+	trap_SendConsoleCommand(EXEC_APPEND, va("headmodel %s\n", headModel));
+
+	trap_SendServerCommand( -1, va("print \"(spawn) model set to: %s\n\"", model)); 
 
 	client->pers.playerclass = client->pers.newplayerclass;
 	
