@@ -1416,7 +1416,16 @@ typedef enum _flag_status {
 	FLAG_DROPPED
 } flagStatus_t;
 
+// Capture The Ghost - CTG
 
+#define MAX_GHOSTS 1
+typedef enum _ghost_status {
+	GHOST_NOT_TAKEN = 0,
+	GHOST_TAKEN,		// CTG
+	GHOST_TAKEN_JINRAI,	// One Flag CTG
+	GHOST_TAKEN_NSF,		// One Flag CTG
+	GHOST_DROPPED
+} ghostStatus_t;
 
 #define	MAX_GLOBAL_SERVERS				4096
 #define	MAX_OTHER_SERVERS					128

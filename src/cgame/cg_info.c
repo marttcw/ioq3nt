@@ -250,6 +250,9 @@ void CG_DrawInformation( void ) {
 	case GT_CTF:
 		s = "Capture The Flag";
 		break;
+	case GT_CTG:
+		s = "Capture The Ghost";
+		break;
 #ifdef MISSIONPACK
 	case GT_1FCTF:
 		s = "One Flag CTF";

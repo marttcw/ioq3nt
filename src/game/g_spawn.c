@@ -274,9 +274,24 @@ qboolean G_CallSpawn( gentity_t *ent ) {
 		return qfalse;
 	}
 
+	if (g_gametype.integer == GT_CTG)
+	{
+		RegisterItem(BG_FindItemForPowerup(PW_GHOSTNONE));
+		RegisterItem(BG_FindItemForPowerup(PW_GHOSTJINRAI));
+		RegisterItem(BG_FindItemForPowerup(PW_GHOSTNSF));
+	}
+
 	// check item spawn functions
 	for ( item=bg_itemlist+1 ; item->classname ; item++ ) {
 		if ( !strcmp(item->classname, ent->classname) ) {
+			// if a CTF flag is found, and game type is CTG
+			// convert the flag point to a ghost point
+			// TODO: Maybe not?
+			if (item->giType == IT_TEAM &&
+					g_gametype.integer == GT_CTG) {
+				item = BG_FindItemForPowerup(PW_GHOSTNONE);
+				ent->classname = item->classname;
+			}
 			G_SpawnItem( ent, item );
 			return qtrue;
 		}
@@ -612,6 +627,14 @@ void SP_worldspawn( void ) {
 
 }
 
+void G_ValidateGhost()
+{
+	gentity_t 	*it_ent;
+
+	it_ent = G_Spawn();
+	it_ent->think = ValidateGhostInMap;
+	it_ent->nextthink = level.time + 500;
+}
 
 /*
 ==============
@@ -637,6 +660,9 @@ void G_SpawnEntitiesFromString( void ) {
 	while( G_ParseSpawnVars() ) {
 		G_SpawnGEntityFromSpawnVars();
 	}	
+
+	if (g_gametype.integer == GT_CTG)
+		G_ValidateGhost();
 
 	level.spawning = qfalse;			// any future calls to G_Spawn*() will be errors
 }

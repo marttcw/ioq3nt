@@ -478,6 +478,9 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	case IT_TEAM:
 		respawn = Pickup_Team(ent, other);
 		break;
+	case IT_GHOST:
+		respawn = Ghost_Touch(ent, other);
+		break;
 	case IT_HOLDABLE:
 		respawn = Pickup_Holdable(ent, other);
 		break;
@@ -497,7 +500,7 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	}
 
 	// powerup pickups are global broadcasts
-	if ( ent->item->giType == IT_POWERUP || ent->item->giType == IT_TEAM) {
+	if ( ent->item->giType == IT_POWERUP || ent->item->giType == IT_TEAM || ent->item->giType == IT_GHOST ) {
 		// if we want the global sound to play
 		if (!ent->speed) {
 			gentity_t	*te;
@@ -746,6 +749,16 @@ void G_CheckTeamItems( void ) {
 		item = BG_FindItem( "Blue Flag" );
 		if ( !item || !itemRegistered[ item - bg_itemlist ] ) {
 			G_Printf( S_COLOR_YELLOW "WARNING: No team_CTF_blueflag in map\n" );
+		}
+	}
+
+	if (g_gametype.integer == GT_CTG) {
+		gitem_t		*item;
+
+		// check for the one ghost
+		item = BG_FindItem( "Ghost" );
+		if ( !item || !itemRegistered[item - bg_itemlist] ) {
+			G_Printf( S_COLOR_YELLOW "WARNING: No team_CTG_ghost in map\n" );
 		}
 	}
 #ifdef MISSIONPACK

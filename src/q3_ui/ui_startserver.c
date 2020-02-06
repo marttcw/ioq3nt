@@ -93,11 +93,12 @@ static const char *gametype_items[] = {
 	"Team Deathmatch",
 	"Tournament",
 	"Capture the Flag",
+	"Capture the Ghost",
 	NULL
 };
 
-static int gametype_remap[] = {GT_FFA, GT_TEAM, GT_TOURNAMENT, GT_CTF};
-static int gametype_remap2[] = {0, 2, 0, 1, 3};
+static int gametype_remap[] = {GT_FFA, GT_TEAM, GT_TOURNAMENT, GT_CTF, GT_CTG};
+static int gametype_remap2[] = {0, 2, 0, 1, 3, 4};
 
 // use ui_servers2.c definition
 extern const char* punkbuster_items[];
@@ -145,6 +146,7 @@ static int GametypeBits( char *string ) {
 
 		if( Q_stricmp( token, "ctf" ) == 0 ) {
 			bits |= 1 << GT_CTF;
+			bits |= 1 << GT_CTG;	// ctg can play ctf maps
 			continue;
 		}
 	}

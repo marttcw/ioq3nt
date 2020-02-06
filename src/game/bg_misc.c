@@ -654,6 +654,57 @@ Only in CTF games
 /* sounds */ ""
 	},
 
+/*QUAKED team_CTG_jinraiGhost (1 0 0) (-16 -16 -16) (16 16 16)
+Only in CTG games
+*/
+	{
+		"team_CTG_jinraiGhost",
+		NULL,
+		{ "models/flags/r_flag.md3",
+		NULL, NULL, NULL },
+/* icon */	"icons/iconf_red1",
+/* pickup */	"Jinrai Ghost",
+		0,
+		IT_GHOST,
+		PW_GHOSTJINRAI,
+/* precache */ "",
+/* sounds */ ""
+	},
+
+/*QUAKED team_CTG_nsfGhost (1 0 0) (-16 -16 -16) (16 16 16)
+Only in CTG games
+*/
+	{
+		"team_CTG_nsfGhost",
+		NULL,
+		{ "models/flags/b_flag.md3",
+		NULL, NULL, NULL },
+/* icon */	"icons/iconf_blu1",
+/* pickup */	"NSF Ghost",
+		0,
+		IT_GHOST,
+		PW_GHOSTNSF,
+/* precache */ "",
+/* sounds */ ""
+	},
+
+/*QUAKED team_CTG_ghost (1 0 0) (-16 -16 -16) (16 16 16)
+Only in CTG games
+*/
+	{
+		"team_CTG_ghost",
+		NULL,
+		{ "models/flags/n_flag.md3",
+		NULL, NULL, NULL },
+/* icon */	"icons/iconf_neutral1",
+/* pickup */	"Ghost",
+		0,
+		IT_GHOST,
+		PW_GHOSTNONE,
+/* precache */ "",
+/* sounds */ ""
+	},
+
 #ifdef MISSIONPACK
 /*QUAKED holdable_kamikaze (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
@@ -934,7 +985,8 @@ gitem_t	*BG_FindItemForPowerup( powerup_t pw ) {
 	for ( i = 0 ; i < bg_numItems ; i++ ) {
 		if ( (bg_itemlist[i].giType == IT_POWERUP || 
 					bg_itemlist[i].giType == IT_TEAM ||
-					bg_itemlist[i].giType == IT_PERSISTANT_POWERUP) && 
+					bg_itemlist[i].giType == IT_PERSISTANT_POWERUP ||
+					bg_itemlist[i].giType == IT_GHOST) && 
 			bg_itemlist[i].giTag == pw ) {
 			return &bg_itemlist[i];
 		}
@@ -1165,12 +1217,23 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 #endif
 		return qfalse;
 
+	case IT_GHOST:
+		// Jinrai cannot touch an Jinrai held Ghost
+		if (ps->persistant[PERS_TEAM] == TEAM_RED && ent->powerups == PW_GHOSTJINRAI)
+			return qfalse;
+		// NSF cannot touch an NSF held Ghost
+		else if (ps->persistant[PERS_TEAM] == TEAM_BLUE && ent->powerups == PW_GHOSTNSF)
+			return qfalse;
+		else
+			return qtrue;
+
 	case IT_HOLDABLE:
 		// can only hold one item at a time
 		if ( ps->stats[STAT_HOLDABLE_ITEM] ) {
 			return qfalse;
 		}
 		return qtrue;
+
 
         case IT_BAD:
             Com_Error( ERR_DROP, "BG_CanItemBeGrabbed: IT_BAD" );

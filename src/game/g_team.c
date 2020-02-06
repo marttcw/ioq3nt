@@ -23,6 +23,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "g_local.h"
 
+typedef struct ctg_ghost_s {
+	gentity_t	*entity;
+	ghostStatus_t	status;
+} ctg_ghost_t;
 
 typedef struct teamgame_s {
 	float			last_flag_capture;
@@ -34,6 +38,7 @@ typedef struct teamgame_s {
 	int				blueTakenTime;
 	int				redObeliskAttackedTime;
 	int				blueObeliskAttackedTime;
+	ctg_ghost_t	ghost;		// CTG
 } teamgame_t;
 
 teamgame_t teamgame;
@@ -41,6 +46,63 @@ teamgame_t teamgame;
 gentity_t	*neutralObelisk;
 
 void Team_SetFlagStatus( int team, flagStatus_t status );
+void Init_Ghost(void);
+
+void Init_Ghost(void)
+{
+	gentity_t	*point = NULL;
+	int		init = 0;
+
+	point = g_entities;
+
+	while (!init) {
+		if (!point->inuse) {
+			point++;
+			continue;
+		}
+
+		if (!strcmp(point->classname, "team_CTG_ghost")) {
+			teamgame.ghost.entity = point;
+			init = 1;
+		}
+	}
+}
+
+#define FRADIUS 800
+void ValidateGhostInMap( gentity_t *ent )
+{
+	vec3_t		start, end, temp, mins, maxs, tvec, offset = {FRADIUS, FRADIUS, FRADIUS};
+	int		numEnts, i, touch[MAX_GENTITIES], dist = FRADIUS;
+	gentity_t	*tent, *targ;
+	float		vlen;
+	qboolean	foundItem = qfalse, foundPreferredItem = qfalse;
+	gitem_t		*item;
+
+	// If ghost exists, this function don't need to run
+	// TODO
+	if (teamgame.ghost.entity)
+		return;
+
+	// TODO?
+}
+
+void Team_SetGhostStatus( ghostStatus_t status )
+{
+	/*
+	qboolean modified = qfalse;
+
+	// update only the ghost modified
+	if (teamgame.ghost.status != status) {
+		modified = qtrue;
+	}
+
+	if (modified) {
+		char st[2];
+
+		st[0] = ;
+	}
+	*/
+}
 
 void Team_InitGame( void ) {
 	memset(&teamgame, 0, sizeof teamgame);
@@ -51,6 +113,11 @@ void Team_InitGame( void ) {
 		Team_SetFlagStatus( TEAM_RED, FLAG_ATBASE );
 		 teamgame.blueStatus = -1; // Invalid to force update
 		Team_SetFlagStatus( TEAM_BLUE, FLAG_ATBASE );
+		break;
+	case GT_CTG:
+		Init_Ghost();
+		teamgame.ghost.status = -1;	// Invalid to force update
+		Team_SetGhostStatus( GHOST_NOT_TAKEN );
 		break;
 #ifdef MISSIONPACK
 	case GT_1FCTF:
@@ -885,6 +952,58 @@ int Pickup_Team( gentity_t *ent, gentity_t *other ) {
 		return Team_TouchOurFlag( ent, other, team );
 	}
 	return Team_TouchEnemyFlag( ent, other, team );
+}
+
+/*
+ * Ghost_Think
+ *
+ * TODO - Change from DTF to CTG (CTF-like)
+ */
+void Ghost_Think( gentity_t *ent )
+{
+	team_t team;
+
+	team = (ent->s.powerups == PW_GHOSTJINRAI) ? TEAM_RED : TEAM_BLUE;
+	ent->count = 0;
+	level.teamScores[team]++;
+	ent->nextthink = level.time + 4000;
+
+	// Refresh scoreboard
+	CalculateRanks();
+}
+
+/*
+ * Ghost_Touch
+ */
+int Ghost_Touch( gentity_t *ent, gentity_t *other )
+{
+	gclient_t *cl = other->client;
+
+	if (!cl)
+		return 0;
+
+	// Protect against overflows by not counting
+	if (ent->count && ent->nextthink < level.time + 1500)
+		return 0;
+
+	if (cl->sess.sessionTeam == TEAM_RED && ent->s.powerups != PW_GHOSTJINRAI)
+	{
+		ent->nextthink = level.time - (level.time % 4000) + 4000;
+		ent->think = Ghost_Think;
+		ent->s.powerups = PW_GHOSTJINRAI;
+		ent->s.modelindex = ITEM_INDEX( BG_FindItemForPowerup(PW_GHOSTJINRAI) );
+		ent->count = 1;
+	}
+	else if (cl->sess.sessionTeam == TEAM_BLUE && ent->s.powerups != PW_GHOSTNSF)
+	{
+		ent->nextthink = level.time - (level.time % 4000) + 4000;
+		ent->think = Ghost_Think;
+		ent->s.powerups = PW_GHOSTNSF;
+		ent->s.modelindex = ITEM_INDEX( BG_FindItemForPowerup(PW_GHOSTNSF) );
+		ent->count = 1;
+	}
+
+	return 0;
 }
 
 /*

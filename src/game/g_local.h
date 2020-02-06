@@ -752,10 +752,8 @@ extern	vmCvar_t	g_enableBreath;
 extern	vmCvar_t	g_singlePlayer;
 extern	vmCvar_t	g_proxMineTimeout;
 extern	vmCvar_t	g_localTeamPref;
-
-// KILDEREAN
 extern	vmCvar_t	g_PureAllowHook;
-// END KILDEREAN
+extern	vmCvar_t	g_ctgspawnstyle;
 
 void	trap_Print( const char *text );
 void	trap_Error( const char *text ) __attribute__((noreturn));

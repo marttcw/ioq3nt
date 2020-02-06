@@ -103,6 +103,7 @@ typedef enum {
 
 	GT_TEAM,			// team deathmatch
 	GT_CTF,				// capture the flag
+	GT_CTG,				// capture the ghost
 	GT_1FCTF,
 	GT_OBELISK,
 	GT_HARVESTER,
@@ -284,6 +285,11 @@ typedef enum {
 	PW_DOUBLER,
 	PW_AMMOREGEN,
 	PW_INVULNERABILITY,
+
+	// CTG
+	PW_GHOSTNONE,
+	PW_GHOSTJINRAI,
+	PW_GHOSTNSF,
 
 	PW_NUM_POWERUPS
 
@@ -647,7 +653,8 @@ typedef enum {
 	IT_HOLDABLE,			// single use, holdable item
 							// EFX: rotate + bob
 	IT_PERSISTANT_POWERUP,
-	IT_TEAM
+	IT_TEAM,
+	IT_GHOST		// CTG (Capture The Ghost)
 } itemType_t;
 
 #define MAX_ITEM_MODELS 4
